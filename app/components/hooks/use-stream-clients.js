@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { StreamChat } from "stream-chat";
+import { StreamVideoClient } from "@stream-io/video-react-sdk";
 
 export function useStreamClients({ apiKey, user, token }) {
     
@@ -7,6 +8,7 @@ export function useStreamClients({ apiKey, user, token }) {
     const [chatClient, setChatClient] = useState(null);
     
     useEffect(() => {
+        let isMounted = true;
         if (!user || !token || !apiKey) return;
 
         const initClient = async () => {
