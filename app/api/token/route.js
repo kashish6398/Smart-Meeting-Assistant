@@ -22,7 +22,7 @@ export async function POST(request) {
             name: userId,
         }
 
-        await serverClient.updateUser(newUser);
+        await serverClient.updateUsers([newUser]);
         
         const validity = 60 * 60 * 24;
         const token = serverClient.generateUserToken({

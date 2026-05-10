@@ -9,6 +9,9 @@ export function useStreamClients({ apiKey, user, token }) {
     
     useEffect(() => {
         let isMounted = true;
+        let myVideoClient = null;
+        let myChatClient = null;
+
         if (!user || !token || !apiKey) return;
 
         const initClient = async () => {
@@ -16,13 +19,13 @@ export function useStreamClients({ apiKey, user, token }) {
             try {
                 const tokenProvider = () => Promise.resolve(token);
             
-            const myVideoClient = new StreamVideoClient({
+            myVideoClient = new StreamVideoClient({
                 apiKey,
                 user,
                 tokenProvider,
             });
 
-            const myChatClient = StreamChat.getInstance(apiKey);
+            myChatClient = StreamChat.getInstance(apiKey);
             await myChatClient.connectUser(user, token);
 
             if(isMounted){
@@ -38,11 +41,11 @@ export function useStreamClients({ apiKey, user, token }) {
 
         return () => {
             isMounted = false;
-            if(videoClient){
-                videoClient.disconnectUser().catch(console.error);
+            if(myVideoClient){
+                myVideoClient.disconnectUser().catch(console.error);
             }
-            if(chatClient){
-                chatClient.disconnectUser().catch(console.error);
+            if(myChatClient){
+                myChatClient.disconnectUser().catch(console.error);
             }
         };
     }, [apiKey, user, token]);
