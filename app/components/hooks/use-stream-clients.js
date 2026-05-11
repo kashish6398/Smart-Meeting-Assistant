@@ -19,7 +19,7 @@ export function useStreamClients({ apiKey, user, token }) {
             try {
                 const tokenProvider = () => Promise.resolve(token);
             
-            myVideoClient = new StreamVideoClient({
+            myVideoClient = StreamVideoClient.getOrCreateInstance({
                 apiKey,
                 user,
                 tokenProvider,

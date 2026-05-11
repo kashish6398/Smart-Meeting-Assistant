@@ -4,6 +4,7 @@ const { useSearchParams, useRouter, useParams } = require("next/navigation");
 import { StreamTheme } from "@stream-io/video-react-sdk";
 import React, { useState, useEffect } from "react";
 import StreamProvider from "../../components/stream-provider";
+import MeetingRoom from "../../components/meeting-room";
 
 const MeetingPage = () => {
   const searchParams = useSearchParams();
@@ -75,9 +76,13 @@ const MeetingPage = () => {
       )
     }
 
+    const handleLeave = ()=> {
+      router.push("/")
+    }
+
   return <StreamProvider user={user} token={token}>
     <StreamTheme>
-      Meeting Room
+      <MeetingRoom callId={callID} onLeave={handleLeave} userId={user.id} userName={user.name} />
     </StreamTheme>
   </StreamProvider>;
 
