@@ -165,11 +165,11 @@ export function TranscriptPanel() {
             {transcripts.map((transcript, idx) => (
               <div
                 key={idx}
-                className="group bg-gradient-to-br from-gray-700 to-gray-750 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-600 hover:border-blue-500/50 transform hover:-translate-y-0.5"
+                className="group bg-linear-to-br from-gray-700 to-gray-750 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-600 hover:border-blue-500/50 transform hover:-translate-y-0.5"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-blue-500/20">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-blue-500/20">
                       {transcript.speaker.charAt(0).toUpperCase()}
                     </div>
                     <div>
