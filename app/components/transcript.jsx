@@ -20,15 +20,16 @@ export function TranscriptPanel() {
       return;
     }
 
-    const channel = client.channel("messaging", call.id);
+    const channel = client.channel("livestream", call.id);
 
     // Watch the channel
-    channel.watch();
+    channel.watch().catch((err) => {
+      console.error("❌ Error watching channel:", err);
+    });
 
     console.log("✅ Listening for closed captions");
 
     const handleClosedCaption = (event) => {
-      // console.log("📝 Closed caption event:", event);
 
       if (event.closed_caption) {
         const newTranscript = {
@@ -55,19 +56,6 @@ export function TranscriptPanel() {
       }
 
       console.log("📨 New message:", message);
-
-      // Check if it's a note message (has custom.type and custom.note_type)
-      // if (message?.custom?.type === "note") {
-      //   const newTranscript = {
-      //     text: message.text,
-      //     speaker: message.custom.speaker || "Unknown",
-      //     timestamp: new Date(message.created_at).toLocaleTimeString(),
-      //     noteType: message.custom.note_type, // action_item, decision, key_point
-      //   };
-
-      //   console.log("✅ Adding transcript:", newTranscript);
-      //   setTranscripts((prev) => [...prev, newTranscript]);
-      // }
     };
 
     call.on("call.closed_caption", handleClosedCaption);
