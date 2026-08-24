@@ -26,6 +26,9 @@ export function useStreamClients({ apiKey, user, token }) {
         const myChatClient = StreamChat.getInstance(apiKey);
         if (myChatClient.userID !== user.id) {
           try {
+            if (myChatClient.userID) {
+              await myChatClient.disconnectUser().catch(() => {});
+            }
             await myChatClient.connectUser(user, token);
           } catch (chatErr) {
             console.warn("Chat connect note:", chatErr);
@@ -49,6 +52,10 @@ export function useStreamClients({ apiKey, user, token }) {
 
     return () => {
       didCancel = true;
+      const clientInstance = StreamChat.getInstance(apiKey);
+      if (clientInstance) {
+        clientInstance.disconnectUser().catch(() => {});
+      }
     };
   }, [apiKey, user?.id, token]);
 

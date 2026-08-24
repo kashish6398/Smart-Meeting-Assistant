@@ -51,6 +51,11 @@ def get_openai_client() -> AsyncOpenAI:
     api_key = get_nararouter_api_key()
     base_url = get_nararouter_base_url()
     
+    if base_url.endswith("/chat/completions"):
+        base_url = base_url[:-len("/chat/completions")]
+    elif base_url.endswith("/chat/completions/"):
+        base_url = base_url[:-len("/chat/completions/")]
+        
     if not api_key:
         logger.warning("No NARAROUTER_API_KEY or OPENAI_API_KEY found in environment variables.")
         api_key = "dummy_key_to_allow_startup"
@@ -191,18 +196,22 @@ async def generate_meeting_summary(transcript_text: str, custom_prompt: Optional
         }
     except Exception as e:
         logger.error(f"NaraRouter API error in generate_meeting_summary: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=502,
-            detail=f"NaraRouter LLM generation error: {str(e)}"
-        )
+        return {
+            "summary": f"### ⚠️ Error Generating Summary\n\nThe AI Meeting Assistant encountered an error communicating with the NaraRouter API. Please check your API key, base URL, and model configurations in the backend environment.\n\n**Details:** {str(e)}",
+            "model": model_name,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "error": True
+        }
 
 async def answer_meeting_question(question: str, transcript_text: str) -> Dict[str, Any]:
     api_key = get_nararouter_api_key()
     if not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="NARAROUTER_API_KEY is not set in backend/.env. Please configure it to use AI assistant Q&A."
-        )
+        return {
+            "answer": "⚠️ **Configuration Error**: `NARAROUTER_API_KEY` is not set in backend environment variables. Please check your `backend/.env` file.",
+            "model": "unknown",
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "error": True
+        }
 
     model_name = get_nararouter_model()
     client = get_openai_client()
@@ -234,10 +243,12 @@ async def answer_meeting_question(question: str, transcript_text: str) -> Dict[s
         }
     except Exception as e:
         logger.error(f"NaraRouter API error in answer_meeting_question: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=502,
-            detail=f"NaraRouter LLM Q&A error: {str(e)}"
-        )
+        return {
+            "answer": f"⚠️ **Error Assistant Q&A**: Failed to communicate with the NaraRouter API.\n\n**Details:** {str(e)}",
+            "model": model_name,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "error": True
+        }
 
 # ==============================================================================
 # API Routes

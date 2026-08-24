@@ -19,35 +19,35 @@ const MeetingUI = ({ participants, onLeave, userName, callId }) => {
   const localParticipant = participants?.find((p) => p.isLocalParticipant);
 
   return (
-    <div className="h-[100dvh] bg-[#050508] text-[#f4f4f5] flex overflow-hidden font-sans select-none">
+    <div className="h-[100dvh] bg-background text-foreground flex overflow-hidden font-sans select-none">
       {/* Main Video & AI Focus Workspace */}
       <div className="flex-1 flex flex-col p-4 md:p-6 gap-4 md:gap-6 relative min-w-0">
         
         {/* Top Minimalist Island Bar */}
         <div className="flex items-center justify-between z-10">
-          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-medium text-zinc-300 font-mono tracking-wide">
-              Space: <span className="text-white font-semibold">{callId}</span>
+          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-surface-card border border-border-subtle backdrop-blur-xl">
+            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+            <span className="text-[11px] font-semibold text-zinc-600 font-mono tracking-wide">
+              Space: <span className="text-foreground font-bold">{callId}</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] text-zinc-400 text-xs font-mono">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-zinc-500 text-xs font-mono font-semibold">
             <span>{participants?.length || 1} online</span>
           </div>
         </div>
 
         {/* Meeting Assistant Centerpiece (Double-Bezel Architecture) */}
-        <div className="flex-1 p-1.5 md:p-2 rounded-[2rem] bg-white/[0.02] border border-white/[0.06] shadow-2xl flex flex-col min-h-0 relative overflow-hidden">
+        <div className="flex-1 p-1.5 md:p-2 rounded-4xl-surface-card/60 border border-border-subtle shadow-2xl flex flex-col min-h-0 relative overflow-hidden">
           {/* Inner Core */}
-          <div className="w-full h-full rounded-[calc(2rem-0.375rem)] bg-[#08080f]/90 border border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+          <div className="w-full h-full rounded-[calc(2rem-0.375rem)] bg-surface-card border border-border-subtle shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] flex flex-col items-center justify-center p-6 relative overflow-hidden">
             
             {/* Ambient background glow inside core */}
-            <div className="absolute w-96 h-96 bg-indigo-600/10 rounded-full blur-[90px] pointer-events-none animate-ambient" />
+            <div className="absolute w-96 h-96 bg-accent/15 rounded-full blur-[90px] pointer-events-none animate-ambient" />
             
             {/* Holographic AI Centerpiece Orb */}
-            <div className="relative z-10 w-24 h-24 md:w-28 md:h-28 rounded-full p-1 bg-gradient-to-tr from-indigo-500/30 via-white/20 to-blue-500/20 shadow-2xl border border-white/10 animate-float flex items-center justify-center">
-              <div className="w-full h-full rounded-full bg-[#0c0c16] flex items-center justify-center text-indigo-400 shadow-inner">
+            <div className="relative z-10 w-24 h-24 md:w-28 md:h-28 rounded-full p-1 bg-linear-to-tr from-accent/30 via-white/40 to-pink-300/30 shadow-2xl border border-border-highlight animate-float flex items-center justify-center">
+              <div className="w-full h-full rounded-full bg-surface-inner flex items-center justify-center text-accent shadow-inner">
                 <svg className="w-10 h-10 md:w-12 md:h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
@@ -57,13 +57,13 @@ const MeetingUI = ({ participants, onLeave, userName, callId }) => {
             </div>
 
             <div className="relative z-10 mt-6 text-center max-w-sm">
-              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-mono uppercase tracking-[0.2em]">
+              <span className="px-2.5 py-0.5 rounded-full bg-secondary-subtle border border-secondary-color/20 text-secondary-color text-[10px] font-mono font-bold uppercase tracking-[0.2em]">
                 Live Synthesis Engine
               </span>
-              <h2 className="text-xl md:text-2xl font-semibold text-white tracking-[-0.02em] mt-2">
+              <h2 className="text-2xl md:text-3xl font-serif text-foreground tracking-[-0.02em] mt-2">
                 Smart Meeting Assistant
               </h2>
-              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+              <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed font-medium">
                 Listening & synchronizing discussions into actionable intelligence
               </p>
             </div>
@@ -73,34 +73,34 @@ const MeetingUI = ({ participants, onLeave, userName, callId }) => {
         {/* Bottom Bar: Local Participant Preview & Controls */}
         <div className="flex items-center justify-between gap-4 z-10">
           {/* User Preview Squircle */}
-          <div className="w-48 aspect-video rounded-2xl overflow-hidden relative p-1 bg-white/[0.03] border border-white/[0.08] shadow-lg flex-shrink-0">
-            <div className="w-full h-full rounded-[12px] overflow-hidden bg-[#0a0a10] relative">
+          <div className="w-48 aspect-video rounded-2xl overflow-hidden relative p-1 bg-surface-card/60 border border-border-subtle shadow-lg shrink-0">
+            <div className="w-full h-full rounded-[12px] overflow-hidden bg-surface-inner relative border border-border-subtle">
               {localParticipant ? (
                 <ParticipantView participant={localParticipant} />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 text-[11px] font-mono">
+                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 text-[11px] font-mono font-semibold">
                   <span>Camera Off</span>
                 </div>
               )}
-              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] font-mono text-zinc-300 border border-white/10">
+              <div className="absolute bottom-2 left-2 bg-surface-card/85 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold text-zinc-700 border border-border-subtle">
                 {userName}
               </div>
             </div>
           </div>
 
           {/* Floating Controls Island */}
-          <div className="px-4 py-1.5 rounded-full bg-[#0c0c14]/90 border border-white/[0.1] shadow-2xl backdrop-blur-2xl flex items-center">
+          <div className="px-4 py-1.5 rounded-full bg-surface-card border border-border-subtle shadow-2xl backdrop-blur-2xl flex items-center">
             <CallControls onLeave={onLeave} />
           </div>
 
-          <div className="w-48 hidden lg:block text-right text-[11px] font-mono text-zinc-500">
+          <div className="w-48 hidden lg:block text-right text-[11px] font-mono font-semibold text-zinc-400">
             Encrypted Stream &bull; Low Latency
           </div>
         </div>
       </div>
 
       {/* Live AI Sidebar (Double-Bezel Architecture) */}
-      <aside className="w-[430px] border-l border-white/[0.08] bg-[#07070c]/90 backdrop-blur-2xl flex flex-col shadow-2xl overflow-hidden flex-shrink-0 z-20">
+      <aside className="w-107.5 border-l border-border-subtle bg-surface-card/90 backdrop-blur-2xl flex flex-col shadow-2xl overflow-hidden flex-shrink-0 z-20">
         <TranscriptPanel callId={callId} userName={userName} />
       </aside>
     </div>
@@ -123,30 +123,85 @@ export default function MeetingRoom({ callId, onLeave, userId }) {
       try {
         myCall = client.call(callType, callId);
 
-        await myCall.getOrCreate({
-          data: {
-            created_by_id: userId,
-            members: [{ user_id: userId, role: "call_member" }],
-          },
-        });
+        // Pre-emptively disable camera/microphone to prevent auto-init errors on devices without webcam/mic
+        await myCall.camera.disable().catch(() => {});
+        await myCall.microphone.disable().catch(() => {});
+
+        try {
+          await myCall.getOrCreate({
+            data: {
+              created_by_id: userId,
+              members: [{ user_id: userId, role: "call_member" }],
+            },
+          });
+        } catch (getOrCreateErr) {
+          console.warn("getOrCreate warning/error:", getOrCreateErr);
+          const isDeviceErr = getOrCreateErr?.message?.toLowerCase().includes("device") || 
+                              getOrCreateErr?.message?.toLowerCase().includes("camera") ||
+                              getOrCreateErr?.message?.toLowerCase().includes("microphone") ||
+                              getOrCreateErr?.message?.toLowerCase().includes("permission") ||
+                              getOrCreateErr?.message?.toLowerCase().includes("getusermedia") ||
+                              getOrCreateErr?.name === "NotFoundError" ||
+                              getOrCreateErr?.name === "NotAllowedError";
+          if (!isDeviceErr) {
+            throw getOrCreateErr;
+          }
+        }
+
+        // Detect device availability to avoid calling enable() on non-existent hardware
+        let hasVideoInput = false;
+        let hasAudioInput = false;
+        try {
+          if (typeof navigator !== "undefined" && navigator.mediaDevices?.enumerateDevices) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            hasVideoInput = devices.some(device => device.kind === "videoinput");
+            hasAudioInput = devices.some(device => device.kind === "audioinput");
+          }
+        } catch (e) {
+          console.warn("Device detection failed:", e);
+        }
 
         // Safe media enablement - handle browser permission denial gracefully
-        try {
-          await myCall.camera.enable();
-        } catch (camErr) {
-          console.warn("Camera could not be enabled:", camErr);
+        if (hasVideoInput) {
+          try {
+            await myCall.camera.enable();
+          } catch (camErr) {
+            console.warn("Camera could not be enabled:", camErr);
+            await myCall.camera.disable().catch(() => {});
+          }
+        } else {
+          console.log("No camera detected. Keeping camera disabled.");
           await myCall.camera.disable().catch(() => {});
         }
 
-        try {
-          await myCall.microphone.enable();
-        } catch (micErr) {
-          console.warn("Microphone could not be enabled:", micErr);
+        if (hasAudioInput) {
+          try {
+            await myCall.microphone.enable();
+          } catch (micErr) {
+            console.warn("Microphone could not be enabled:", micErr);
+            await myCall.microphone.disable().catch(() => {});
+          }
+        } else {
+          console.log("No microphone detected. Keeping microphone disabled.");
           await myCall.microphone.disable().catch(() => {});
         }
 
         // Join call safely
-        await myCall.join({ create: true });
+        try {
+          await myCall.join({ create: true });
+        } catch (joinErr) {
+          console.warn("join warning/error:", joinErr);
+          const isDeviceErr = joinErr?.message?.toLowerCase().includes("device") || 
+                              joinErr?.message?.toLowerCase().includes("camera") ||
+                              joinErr?.message?.toLowerCase().includes("microphone") ||
+                              joinErr?.message?.toLowerCase().includes("permission") ||
+                              joinErr?.message?.toLowerCase().includes("getusermedia") ||
+                              joinErr?.name === "NotFoundError" ||
+                              joinErr?.name === "NotAllowedError";
+          if (!isDeviceErr) {
+            throw joinErr;
+          }
+        }
 
         // Try enabling closed captions if supported
         try {
