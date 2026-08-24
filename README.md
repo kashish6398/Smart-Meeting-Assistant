@@ -35,8 +35,8 @@ STREAM_API_SECRET=your_stream_api_secret
 
 # NaraRouter / OpenRouter LLM Configuration
 NARAROUTER_API_KEY=your_nararouter_api_key
-NARAROUTER_BASE_URL=https://openrouter.ai/api/v1
-NARAROUTER_MODEL=meta-llama/llama-3.3-70b-instruct
+NARAROUTER_BASE_URL=https://router.bynara.id/v1/chat/completions
+NARAROUTER_MODEL=mistral-medium-3-5
 
 # Server Port & Host
 PORT=8000
