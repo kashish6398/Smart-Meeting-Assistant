@@ -1,7 +1,6 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import StreamProvider from "@/app/components/stream-provider";
 import MeetingRoom from "@/app/components/meeting-room";
@@ -12,35 +11,53 @@ export default function MeetingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const callId = params.id;
-  const name = searchParams.get("name") || "anonymous";
+  const callId = params?.id || "smart-meeting-room";
+  const rawName = searchParams?.get("name") || "Anonymous";
 
-  const [user, setUser] = useState(null);
+  // Stable user object generated once per session
+  const user = useMemo(() => {
+    const sanitizedBase = rawName.toLowerCase().replace(/[^a-z0-9_-]/g, "_") || "user";
+    const uniqueUserId = `${sanitizedBase}-${Math.random().toString(36).substring(2, 6)}`;
+    return {
+      id: uniqueUserId,
+      name: rawName,
+    };
+  }, [rawName]);
+
   const [token, setToken] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setUser({
-      id: name.toLowerCase().replace(/\s+/g, "-"),
-      name,
-    });
-  }, [name]);
+    if (!user?.id) return;
 
-  useEffect(() => {
-    if (!user) return;
+    let isMounted = true;
 
     fetch("/api/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: user.id }),
     })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.token) setToken(data.token);
-        else setError("No token returned");
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || `Server returned error ${res.status}`);
+        }
+        if (isMounted) {
+          if (data.token) {
+            setToken(data.token);
+          } else {
+            setError("No token returned from authentication server");
+          }
+        }
       })
-      .catch((err) => setError(err.message));
-  }, [user]);
+      .catch((err) => {
+        if (isMounted) setError(err.message);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user.id]);
 
   const handleLeave = () => {
     router.push("/");
@@ -48,15 +65,22 @@ export default function MeetingPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-        <div className="p-6 bg-red-900/20 border border-red-500 rounded-lg">
-          <p className="text-red-500 font-bold text-lg mb-2">Error</p>
-          <p>{error}</p>
+      <div className="flex items-center justify-center min-h-[100dvh] bg-[#050508] text-white p-6">
+        <div className="p-8 max-w-md w-full bg-[#0c0c14] border border-red-500/30 rounded-[2rem] text-center shadow-2xl">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center">
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Authentication Error</h3>
+          <p className="text-xs text-zinc-400 leading-relaxed mb-6">{error}</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600"
+            className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 active:scale-[0.98] text-white rounded-full font-semibold text-xs transition-all"
           >
-            Back
+            ← Return to Lobby
           </button>
         </div>
       </div>
@@ -65,10 +89,12 @@ export default function MeetingPage() {
 
   if (!token || !user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-lg">Connecting…</p>
+      <div className="flex items-center justify-center min-h-[100dvh] bg-[#050508] text-white">
+        <div className="flex flex-col items-center">
+          <div className="w-10 h-10 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+          <p className="mt-4 text-xs font-mono tracking-widest uppercase text-zinc-400">
+            Authorizing Workspace...
+          </p>
         </div>
       </div>
     );

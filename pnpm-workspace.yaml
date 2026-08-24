@@ -1,0 +1,5 @@
+allowBuilds:
+  sharp: true
+  stream-chat: true
+  stream-chat-react: true
+  unrs-resolver: true

@@ -5,48 +5,52 @@ import { StreamChat } from "stream-chat";
 export function useStreamClients({ apiKey, user, token }) {
   const [videoClient, setVideoClient] = useState(null);
   const [chatClient, setChatClient] = useState(null);
+  const [clientError, setClientError] = useState(null);
 
   useEffect(() => {
-    if (!user || !token || !apiKey) return;
+    if (!user?.id || !token || !apiKey) return;
 
-    let isMounted = true;
+    let didCancel = false;
 
     const initClients = async () => {
       try {
-        // Initialize Video Client
+        // Initialize or retrieve Video Client instance safely
         const tokenProvider = () => Promise.resolve(token);
-        const myVideoClient = new StreamVideoClient({
+        const myVideoClient = StreamVideoClient.getOrCreateInstance({
           apiKey,
           user,
           tokenProvider,
         });
 
-        // Initialize Chat Client
+        // Initialize or connect Chat Client safely
         const myChatClient = StreamChat.getInstance(apiKey);
-        await myChatClient.connectUser(user, token);
+        if (myChatClient.userID !== user.id) {
+          try {
+            await myChatClient.connectUser(user, token);
+          } catch (chatErr) {
+            console.warn("Chat connect note:", chatErr);
+          }
+        }
 
-        if (isMounted) {
+        if (!didCancel) {
           setVideoClient(myVideoClient);
           setChatClient(myChatClient);
+          setClientError(null);
         }
       } catch (error) {
         console.error("Client initialization error:", error);
+        if (!didCancel) {
+          setClientError(error?.message || "Failed to initialize Stream client");
+        }
       }
     };
 
     initClients();
 
     return () => {
-      isMounted = false;
-      // Cleanup only in production
-      if (videoClient) {
-        videoClient.disconnectUser().catch(console.error);
-      }
-      if (chatClient) {
-        chatClient.disconnectUser().catch(console.error);
-      }
+      didCancel = true;
     };
-  }, [apiKey, user, token]);
+  }, [apiKey, user?.id, token]);
 
-  return { videoClient, chatClient };
+  return { videoClient, chatClient, clientError };
 }

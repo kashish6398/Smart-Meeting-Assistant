@@ -4,79 +4,105 @@ import { useEffect, useState, useRef } from "react";
 import {
   StreamCall,
   useStreamVideoClient,
-  SpeakerLayout,
   CallControls,
   StreamTheme,
   ParticipantView,
-  useCallStateHooks
+  useCallStateHooks,
+  useCall,
 } from "@stream-io/video-react-sdk";
 
 import { TranscriptPanel } from "@/app/components/transcript";
 
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 
-const MeetingUI = ({ participants, onLeave, userName }) => {
-  const localParticipant = participants.find((p) => p.isLocalParticipant);
+const MeetingUI = ({ participants, onLeave, userName, callId }) => {
+  const localParticipant = participants?.find((p) => p.isLocalParticipant);
 
   return (
-    <div className="h-screen bg-[#0f172a] text-white flex overflow-hidden font-sans">
-      {/* Main Video Area */}
-      <div className="flex-1 flex flex-col p-6 gap-6 relative">
-        {/* Meeting Assistant (Main View) */}
-        <div className="flex-1 bg-[#1e293b]/50 backdrop-blur-md rounded-[2.5rem] border-2 border-blue-500/40 flex flex-col items-center justify-center relative shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)]">
-          <div className="w-32 h-32 rounded-full bg-linear-to-br from-blue-600 to-blue-400 flex items-center justify-center text-4xl font-bold shadow-2xl border-4 border-white/10 animate-pulse">
-            MA
-          </div>
-
-          <div className="mt-8 text-center">
-            <h2 className="text-2xl font-bold text-white/90 tracking-tight">
-              Smart Meeting Assistant
-            </h2>
-            <p className="text-blue-400/80 text-sm mt-2 font-medium tracking-widest uppercase">
-              Listening & Processing...
-            </p>
-          </div>
-
-          <div className="absolute bottom-6 left-6 flex items-center gap-3 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10">
-            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
-            <span className="text-sm font-semibold tracking-wide">
-              Meeting Assistant
+    <div className="h-[100dvh] bg-[#050508] text-[#f4f4f5] flex overflow-hidden font-sans select-none">
+      {/* Main Video & AI Focus Workspace */}
+      <div className="flex-1 flex flex-col p-4 md:p-6 gap-4 md:gap-6 relative min-w-0">
+        
+        {/* Top Minimalist Island Bar */}
+        <div className="flex items-center justify-between z-10">
+          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] font-medium text-zinc-300 font-mono tracking-wide">
+              Space: <span className="text-white font-semibold">{callId}</span>
             </span>
-            <div className="flex gap-1 ml-2">
-              <div className="w-1 h-3 bg-blue-500/50 rounded-full animate-[bounce_1s_infinite_100ms]" />
-              <div className="w-1 h-4 bg-blue-500/50 rounded-full animate-[bounce_1s_infinite_200ms]" />
-              <div className="w-1 h-3 bg-blue-500/50 rounded-full animate-[bounce_1s_infinite_300ms]" />
+          </div>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] text-zinc-400 text-xs font-mono">
+            <span>{participants?.length || 1} online</span>
+          </div>
+        </div>
+
+        {/* Meeting Assistant Centerpiece (Double-Bezel Architecture) */}
+        <div className="flex-1 p-1.5 md:p-2 rounded-[2rem] bg-white/[0.02] border border-white/[0.06] shadow-2xl flex flex-col min-h-0 relative overflow-hidden">
+          {/* Inner Core */}
+          <div className="w-full h-full rounded-[calc(2rem-0.375rem)] bg-[#08080f]/90 border border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            
+            {/* Ambient background glow inside core */}
+            <div className="absolute w-96 h-96 bg-indigo-600/10 rounded-full blur-[90px] pointer-events-none animate-ambient" />
+            
+            {/* Holographic AI Centerpiece Orb */}
+            <div className="relative z-10 w-24 h-24 md:w-28 md:h-28 rounded-full p-1 bg-gradient-to-tr from-indigo-500/30 via-white/20 to-blue-500/20 shadow-2xl border border-white/10 animate-float flex items-center justify-center">
+              <div className="w-full h-full rounded-full bg-[#0c0c16] flex items-center justify-center text-indigo-400 shadow-inner">
+                <svg className="w-10 h-10 md:w-12 md:h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" x2="12" y1="19" y2="22" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="relative z-10 mt-6 text-center max-w-sm">
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-mono uppercase tracking-[0.2em]">
+                Live Synthesis Engine
+              </span>
+              <h2 className="text-xl md:text-2xl font-semibold text-white tracking-[-0.02em] mt-2">
+                Smart Meeting Assistant
+              </h2>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Listening & synchronizing discussions into actionable intelligence
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Local User & Controls Overlay */}
-        <div className="h-56 flex flex-col items-center gap-6">
-          {/* User Video */}
-          <div className="w-72 aspect-video rounded-3xl overflow-hidden relative border-2 border-white/10 shadow-2xl transform transition-transform hover:scale-105 duration-300">
-            {localParticipant ? (
-              <ParticipantView participant={localParticipant} />
-            ) : (
-              <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-gray-700 animate-pulse" />
+        {/* Bottom Bar: Local Participant Preview & Controls */}
+        <div className="flex items-center justify-between gap-4 z-10">
+          {/* User Preview Squircle */}
+          <div className="w-48 aspect-video rounded-2xl overflow-hidden relative p-1 bg-white/[0.03] border border-white/[0.08] shadow-lg flex-shrink-0">
+            <div className="w-full h-full rounded-[12px] overflow-hidden bg-[#0a0a10] relative">
+              {localParticipant ? (
+                <ParticipantView participant={localParticipant} />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 text-[11px] font-mono">
+                  <span>Camera Off</span>
+                </div>
+              )}
+              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] font-mono text-zinc-300 border border-white/10">
+                {userName}
               </div>
-            )}
-            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-xl text-xs font-bold border border-white/10">
-              {userName} (You)
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="bg-black/40 backdrop-blur-2xl px-8 py-3 rounded-3xl border border-white/10 shadow-2xl flex items-center gap-2">
+          {/* Floating Controls Island */}
+          <div className="px-4 py-1.5 rounded-full bg-[#0c0c14]/90 border border-white/[0.1] shadow-2xl backdrop-blur-2xl flex items-center">
             <CallControls onLeave={onLeave} />
           </div>
+
+          <div className="w-48 hidden lg:block text-right text-[11px] font-mono text-zinc-500">
+            Encrypted Stream &bull; Low Latency
+          </div>
         </div>
       </div>
 
-      {/* Live Transcript Sidebar */}
-      <div className="w-[420px] bg-[#1e293b]/30 backdrop-blur-xl border-l border-white/10 flex flex-col shadow-2xl overflow-hidden">
-        <TranscriptPanel />
-      </div>
+      {/* Live AI Sidebar (Double-Bezel Architecture) */}
+      <aside className="w-[430px] border-l border-white/[0.08] bg-[#07070c]/90 backdrop-blur-2xl flex flex-col shadow-2xl overflow-hidden flex-shrink-0 z-20">
+        <TranscriptPanel callId={callId} userName={userName} />
+      </aside>
     </div>
   );
 };
@@ -85,20 +111,17 @@ export default function MeetingRoom({ callId, onLeave, userId }) {
   const client = useStreamVideoClient();
   const [call, setCall] = useState(null);
   const [error, setError] = useState(null);
-
-  const joinedRef = useRef(false);
-  const leavingRef = useRef(false);
   const callType = "default";
 
   useEffect(() => {
-    if (!client) return;
-    if (joinedRef.current) return;
+    if (!client || !callId || !userId) return;
 
-    joinedRef.current = true;
+    let isSubscribed = true;
+    let myCall = null;
 
     const init = async () => {
       try {
-        const myCall = client.call(callType, callId);
+        myCall = client.call(callType, callId);
 
         await myCall.getOrCreate({
           data: {
@@ -106,39 +129,59 @@ export default function MeetingRoom({ callId, onLeave, userId }) {
             members: [{ user_id: userId, role: "call_member" }],
           },
         });
-        await myCall.camera.enable();
-        await myCall.microphone.enable();
 
+        // Safe media enablement - handle browser permission denial gracefully
+        try {
+          await myCall.camera.enable();
+        } catch (camErr) {
+          console.warn("Camera could not be enabled:", camErr);
+          await myCall.camera.disable().catch(() => {});
+        }
+
+        try {
+          await myCall.microphone.enable();
+        } catch (micErr) {
+          console.warn("Microphone could not be enabled:", micErr);
+          await myCall.microphone.disable().catch(() => {});
+        }
+
+        // Join call safely
         await myCall.join({ create: true });
 
-        await myCall.startClosedCaptions({ language: "en" });
+        // Try enabling closed captions if supported
+        try {
+          await myCall.startClosedCaptions({ language: "en" });
+        } catch (ccErr) {
+          console.log("Closed captions notice:", ccErr);
+        }
 
         myCall.on("call.session_ended", () => {
           onLeave?.();
         });
 
-        setCall(myCall);
+        if (isSubscribed) {
+          setCall(myCall);
+          setError(null);
+        }
       } catch (err) {
-        setError(err.message);
+        console.error("Call initialization error:", err);
+        if (isSubscribed) {
+          setError(err.message || "Failed to connect to video call");
+        }
       }
     };
 
     init();
 
     return () => {
-      if (call && !leavingRef.current) {
-        leavingRef.current = true;
-        call.leave().catch(() => {});
+      isSubscribed = false;
+      if (myCall) {
+        myCall.leave().catch(() => {});
       }
     };
   }, [client, callId, userId]);
 
   const handleLeaveClick = async () => {
-    if (leavingRef.current) {
-      onLeave?.();
-      return;
-    }
-    leavingRef.current = true;
     try {
       if (call) {
         await call.leave().catch(() => {});
@@ -150,54 +193,87 @@ export default function MeetingRoom({ callId, onLeave, userId }) {
     }
   };
 
-  if (error)
+  if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-white bg-[#0f172a]">
-        <div className="p-10 bg-red-900/20 border border-red-500/50 rounded-[2.5rem] text-center backdrop-blur-xl">
-          <h3 className="text-2xl font-bold mb-2">Meeting Error</h3>
-          <p className="text-gray-400">{error}</p>
+      <div className="flex items-center justify-center min-h-[100dvh] text-white bg-[#050508] p-6">
+        <div className="p-8 max-w-md w-full bg-[#0c0c14] border border-red-500/30 rounded-[2rem] text-center shadow-2xl">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center">
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold mb-2 text-white">Connection Interrupted</h3>
+          <p className="text-xs text-zinc-400 leading-relaxed mb-6">{error}</p>
           <button
             onClick={onLeave}
-            className="mt-8 px-8 py-3 bg-red-600 rounded-2xl font-bold"
+            className="w-full py-3 bg-red-600 hover:bg-red-500 active:scale-[0.98] text-white text-sm font-semibold rounded-full shadow-lg transition-all duration-200"
           >
-            Exit
+            Return to Lobby
           </button>
         </div>
       </div>
     );
+  }
 
-  if (!call)
+  if (!call) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-white bg-[#0f172a]">
-        <div className="text-center">
-          <div className="animate-spin h-20 w-20 border-4 border-t-blue-500 rounded-full mx-auto"></div>
-          <p className="mt-10 text-xl font-medium text-white/60">
-            Initializing Smart Workspace...
+      <div className="flex items-center justify-center min-h-[100dvh] text-white bg-[#050508]">
+        <div className="flex flex-col items-center">
+          <div className="w-10 h-10 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+          <p className="mt-4 text-xs font-mono tracking-widest uppercase text-zinc-400">
+            Joining Space...
           </p>
         </div>
       </div>
     );
+  }
 
   return (
     <StreamTheme>
       <StreamCall call={call}>
-        <MeetingUIWithHooks onLeave={handleLeaveClick} />
+        <MeetingUIWithHooks onLeave={handleLeaveClick} callId={callId} />
       </StreamCall>
     </StreamTheme>
   );
 }
 
-const MeetingUIWithHooks = ({ onLeave }) => {
+const RemoteAudio = ({ participant }) => {
+  const call = useCall();
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (!audioEl || !call || participant.isLocalParticipant) return;
+
+    const unbind = call.bindAudioElement(audioEl, participant.sessionId, "audioTrack");
+    return () => {
+      unbind();
+    };
+  }, [call, participant.sessionId, participant.isLocalParticipant]);
+
+  if (participant.isLocalParticipant) return null;
+  return <audio ref={audioRef} autoPlay playsInline />;
+};
+
+const MeetingUIWithHooks = ({ onLeave, callId }) => {
   const { useParticipants } = useCallStateHooks();
   const participants = useParticipants();
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const userName = searchParams?.get("name") || "User";
 
   return (
-    <MeetingUI
-      participants={participants}
-      onLeave={onLeave}
-      userName={userName}
-    />
+    <>
+      <MeetingUI
+        participants={participants}
+        onLeave={onLeave}
+        userName={userName}
+        callId={callId}
+      />
+      {participants.map((p) => (
+        <RemoteAudio key={p.sessionId} participant={p} />
+      ))}
+    </>
   );
 };
