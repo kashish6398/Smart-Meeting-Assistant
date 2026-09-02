@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import StreamProvider from "@/app/components/stream-provider";
 import MeetingRoom from "@/app/components/meeting-room";
@@ -14,15 +14,15 @@ export default function MeetingPage() {
   const callId = params?.id || "smart-meeting-room";
   const rawName = searchParams?.get("name") || "Anonymous";
 
-  // Stable user object generated once per session
-  const user = useMemo(() => {
+  // Stable user object initialized once per session
+  const [user] = useState(() => {
     const sanitizedBase = rawName.toLowerCase().replace(/[^a-z0-9_-]/g, "_") || "user";
     const uniqueUserId = `${sanitizedBase}-${Math.random().toString(36).substring(2, 6)}`;
     return {
       id: uniqueUserId,
       name: rawName,
     };
-  }, [rawName]);
+  });
 
   const [token, setToken] = useState(null);
   const [error, setError] = useState(null);
@@ -80,7 +80,7 @@ export default function MeetingPage() {
             onClick={() => router.push("/")}
             className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 active:scale-[0.98] text-white rounded-full font-semibold text-xs transition-all"
           >
-            ← Return to Lobby
+            Return to Lobby
           </button>
         </div>
       </div>

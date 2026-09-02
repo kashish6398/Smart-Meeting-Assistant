@@ -10,11 +10,10 @@ export function useStreamClients({ apiKey, user, token }) {
   useEffect(() => {
     if (!user?.id || !token || !apiKey) return;
 
-    let didCancel = false;
+    let isMounted = true;
 
     const initClients = async () => {
       try {
-        // Initialize or retrieve Video Client instance safely
         const tokenProvider = () => Promise.resolve(token);
         const myVideoClient = StreamVideoClient.getOrCreateInstance({
           apiKey,
@@ -22,11 +21,10 @@ export function useStreamClients({ apiKey, user, token }) {
           tokenProvider,
         });
 
-        // Initialize or connect Chat Client safely
         const myChatClient = StreamChat.getInstance(apiKey);
-        if (myChatClient.userID !== user.id) {
+        if (myChatClient.userID !== user.id || !myChatClient.user) {
           try {
-            if (myChatClient.userID) {
+            if (myChatClient.userID && myChatClient.userID !== user.id) {
               await myChatClient.disconnectUser().catch(() => {});
             }
             await myChatClient.connectUser(user, token);
@@ -35,14 +33,14 @@ export function useStreamClients({ apiKey, user, token }) {
           }
         }
 
-        if (!didCancel) {
+        if (isMounted) {
           setVideoClient(myVideoClient);
           setChatClient(myChatClient);
           setClientError(null);
         }
       } catch (error) {
         console.error("Client initialization error:", error);
-        if (!didCancel) {
+        if (isMounted) {
           setClientError(error?.message || "Failed to initialize Stream client");
         }
       }
@@ -51,11 +49,7 @@ export function useStreamClients({ apiKey, user, token }) {
     initClients();
 
     return () => {
-      didCancel = true;
-      const clientInstance = StreamChat.getInstance(apiKey);
-      if (clientInstance) {
-        clientInstance.disconnectUser().catch(() => {});
-      }
+      isMounted = false;
     };
   }, [apiKey, user?.id, token]);
 

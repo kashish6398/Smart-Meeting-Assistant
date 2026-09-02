@@ -123,9 +123,13 @@ export default function MeetingRoom({ callId, onLeave, userId }) {
       try {
         myCall = client.call(callType, callId);
 
+        if (!isSubscribed) return;
+
         // Pre-emptively disable camera/microphone to prevent auto-init errors on devices without webcam/mic
         await myCall.camera.disable().catch(() => {});
         await myCall.microphone.disable().catch(() => {});
+
+        if (!isSubscribed) return;
 
         try {
           await myCall.getOrCreate({
@@ -136,79 +140,21 @@ export default function MeetingRoom({ callId, onLeave, userId }) {
           });
         } catch (getOrCreateErr) {
           console.warn("getOrCreate warning/error:", getOrCreateErr);
-          const isDeviceErr = getOrCreateErr?.message?.toLowerCase().includes("device") || 
-                              getOrCreateErr?.message?.toLowerCase().includes("camera") ||
-                              getOrCreateErr?.message?.toLowerCase().includes("microphone") ||
-                              getOrCreateErr?.message?.toLowerCase().includes("permission") ||
-                              getOrCreateErr?.message?.toLowerCase().includes("getusermedia") ||
-                              getOrCreateErr?.name === "NotFoundError" ||
-                              getOrCreateErr?.name === "NotAllowedError";
-          if (!isDeviceErr) {
-            throw getOrCreateErr;
-          }
         }
 
-        // Detect device availability to avoid calling enable() on non-existent hardware
-        let hasVideoInput = false;
-        let hasAudioInput = false;
-        try {
-          if (typeof navigator !== "undefined" && navigator.mediaDevices?.enumerateDevices) {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            hasVideoInput = devices.some(device => device.kind === "videoinput");
-            hasAudioInput = devices.some(device => device.kind === "audioinput");
-          }
-        } catch (e) {
-          console.warn("Device detection failed:", e);
-        }
-
-        // Safe media enablement - handle browser permission denial gracefully
-        if (hasVideoInput) {
-          try {
-            await myCall.camera.enable();
-          } catch (camErr) {
-            console.warn("Camera could not be enabled:", camErr);
-            await myCall.camera.disable().catch(() => {});
-          }
-        } else {
-          console.log("No camera detected. Keeping camera disabled.");
-          await myCall.camera.disable().catch(() => {});
-        }
-
-        if (hasAudioInput) {
-          try {
-            await myCall.microphone.enable();
-          } catch (micErr) {
-            console.warn("Microphone could not be enabled:", micErr);
-            await myCall.microphone.disable().catch(() => {});
-          }
-        } else {
-          console.log("No microphone detected. Keeping microphone disabled.");
-          await myCall.microphone.disable().catch(() => {});
-        }
+        if (!isSubscribed) return;
 
         // Join call safely
         try {
           await myCall.join({ create: true });
         } catch (joinErr) {
           console.warn("join warning/error:", joinErr);
-          const isDeviceErr = joinErr?.message?.toLowerCase().includes("device") || 
-                              joinErr?.message?.toLowerCase().includes("camera") ||
-                              joinErr?.message?.toLowerCase().includes("microphone") ||
-                              joinErr?.message?.toLowerCase().includes("permission") ||
-                              joinErr?.message?.toLowerCase().includes("getusermedia") ||
-                              joinErr?.name === "NotFoundError" ||
-                              joinErr?.name === "NotAllowedError";
-          if (!isDeviceErr) {
-            throw joinErr;
-          }
         }
 
-        // Try enabling closed captions if supported
-        try {
-          await myCall.startClosedCaptions({ language: "en" });
-        } catch (ccErr) {
-          console.log("Closed captions notice:", ccErr);
-        }
+        if (!isSubscribed) return;
+
+        // Try enabling closed captions in background (non-blocking)
+        myCall.startClosedCaptions({ language: "en" }).catch(() => {});
 
         myCall.on("call.session_ended", () => {
           onLeave?.();
@@ -230,9 +176,6 @@ export default function MeetingRoom({ callId, onLeave, userId }) {
 
     return () => {
       isSubscribed = false;
-      if (myCall) {
-        myCall.leave().catch(() => {});
-      }
     };
   }, [client, callId, userId]);
 

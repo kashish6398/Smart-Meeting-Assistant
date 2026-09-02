@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useCall } from "@stream-io/video-react-sdk";
 import { useChatContext } from "stream-chat-react";
 
@@ -15,6 +15,11 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
   const [qaHistory, setQaHistory] = useState([]);
   const [manualSpeech, setManualSpeech] = useState("");
   const [copied, setCopied] = useState(false);
+  
+  // Web Speech Recognition state
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
+  const recognitionRef = useRef(null);
 
   const transcriptEndRef = useRef(null);
   const qaEndRef = useRef(null);
@@ -36,7 +41,7 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
   }, [qaHistory, activeTab]);
 
   // Sync transcript line to backend store
-  const syncTranscriptToBackend = async (item) => {
+  const syncTranscriptToBackend = useCallback(async (item) => {
     try {
       await fetch(`${backendUrl}/api/transcripts`, {
         method: "POST",
@@ -49,32 +54,121 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
     } catch (err) {
       console.warn("Could not sync transcript to backend:", err);
     }
+  }, [backendUrl, callId]);
+
+  // Web Speech API initialization
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      const current = event.resultIndex;
+      const transcriptText = event.results[current][0].transcript.trim();
+
+      if (transcriptText) {
+        const newTranscript = {
+          speaker: userName || "Participant",
+          text: transcriptText,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        };
+
+        setTranscripts((prev) => [...prev, newTranscript]);
+        syncTranscriptToBackend(newTranscript);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.warn("Speech recognition notice:", event.error);
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        setIsListening(false);
+      }
+    };
+
+    recognition.onend = () => {
+      // Auto-restart if user still wants listening active
+      if (recognitionRef.current?.shouldListen) {
+        try {
+          recognition.start();
+        } catch (e) {
+          // Ignore if already started
+        }
+      } else {
+        setIsListening(false);
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    // Auto-start speech recognition
+    try {
+      recognition.shouldListen = true;
+      recognition.start();
+      setIsListening(true);
+    } catch (e) {
+      console.log("Speech recognition auto-start waiting for user gesture:", e);
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.shouldListen = false;
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+    };
+  }, [userName, syncTranscriptToBackend]);
+
+  const toggleSpeechRecognition = () => {
+    if (!recognitionRef.current) return;
+
+    if (isListening) {
+      recognitionRef.current.shouldListen = false;
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+      setIsListening(false);
+    } else {
+      recognitionRef.current.shouldListen = true;
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (e) {
+        console.warn("Error starting speech recognition:", e);
+      }
+    }
   };
 
+  // Stream call event listeners
   useEffect(() => {
     if (!call) return;
 
     let channel = null;
-    if (client) {
+    if (client && client.userID) {
       try {
         channel = client.channel("livestream", call.id);
-        channel.watch().catch((err) => {
-          console.warn("Channel watch notice:", err);
-        });
-      } catch (e) {
-        console.warn("Could not initialize Stream chat channel:", e);
-      }
+        channel.watch().catch(() => {});
+      } catch (e) {}
     }
 
     const handleClosedCaption = (event) => {
-      if (event?.closed_caption) {
+      if (event?.closed_caption?.text) {
         const newTranscript = {
           text: event.closed_caption.text,
           speaker:
             event.closed_caption.user?.name ||
             event.closed_caption.user?.id ||
             "Participant",
-          timestamp: new Date(event.closed_caption.start_time || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          timestamp: new Date(event.closed_caption.start_time || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
         };
 
         setTranscripts((prev) => [...prev, newTranscript]);
@@ -84,11 +178,11 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
 
     const handleNewMessage = (event) => {
       const message = event.message;
-      if (message?.user?.id === "meeting-assistant-bot") {
+      if (message?.user?.id === "meeting-assistant-bot" && message?.text) {
         const botItem = {
           speaker: "Meeting Assistant",
           text: message.text,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           isBot: true,
         };
         setTranscripts((prev) => [...prev, botItem]);
@@ -106,7 +200,7 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
         channel.off("message.new", handleNewMessage);
       }
     };
-  }, [call, client, callId]);
+  }, [call, client, callId, syncTranscriptToBackend]);
 
   // Add manual note/speech
   const handleAddManualSpeech = (e) => {
@@ -116,7 +210,7 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
     const newTranscript = {
       speaker: userName,
       text: manualSpeech.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
     };
 
     setTranscripts((prev) => [...prev, newTranscript]);
@@ -144,7 +238,10 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
       }
       setAiSummary(data);
     } catch (err) {
-      alert(`Summary Error: ${err.message}`);
+      setAiSummary({
+        summary: `### Unable to complete summary\n\n${err.message}`,
+        model: "NaraRouter",
+      });
     } finally {
       setIsSummarizing(false);
     }
@@ -162,7 +259,7 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
     const userEntry = {
       role: "user",
       text: userQ,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
     setQaHistory((prev) => [...prev, userEntry]);
 
@@ -184,16 +281,16 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
 
       const aiEntry = {
         role: "assistant",
-        text: data.answer,
+        text: data.answer || "No response received",
         model: data.model,
-        timestamp: data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: data.timestamp || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setQaHistory((prev) => [...prev, aiEntry]);
     } catch (err) {
       const errEntry = {
         role: "assistant",
         text: `Error: ${err.message}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setQaHistory((prev) => [...prev, errEntry]);
     } finally {
@@ -223,9 +320,25 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
             </div>
             <div>
               <h3 className="text-xs font-semibold text-foreground tracking-tight">Meeting Intelligence</h3>
-              <p className="text-[10px] text-zinc-500 font-mono font-semibold">
-                {transcripts.length} {transcripts.length === 1 ? "event" : "events"} synced
-              </p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-[10px] text-zinc-500 font-mono font-semibold">
+                  {transcripts.length} {transcripts.length === 1 ? "event" : "events"} synced
+                </p>
+                {speechSupported && (
+                  <button
+                    onClick={toggleSpeechRecognition}
+                    title={isListening ? "Microphone listening (Click to pause)" : "Microphone paused (Click to start speech transcription)"}
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold flex items-center gap-1 transition ${
+                      isListening
+                        ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30"
+                        : "bg-zinc-200 text-zinc-600 hover:bg-zinc-300"
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${isListening ? "bg-emerald-500 animate-pulse" : "bg-zinc-400"}`} />
+                    {isListening ? "Voice Active" : "Voice Paused"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -289,7 +402,7 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
                 </div>
                 <p className="text-xs font-semibold text-foreground">Listening to conversation...</p>
                 <p className="text-[11px] text-zinc-500 mt-1 max-w-xs leading-relaxed font-medium">
-                  Speech will automatically appear here and sync with NaraRouter AI.
+                  Speak into your microphone or type below. Speech is automatically transcribed in real time and synced to NaraRouter.
                 </p>
               </div>
             ) : (
@@ -323,14 +436,14 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
             <div ref={transcriptEndRef} />
           </div>
 
-          {/* Note Input */}
+          {/* Note / Test Input */}
           <form
             onSubmit={handleAddManualSpeech}
             className="p-3 border-t border-border-subtle bg-surface-card flex gap-2"
           >
             <input
               type="text"
-              placeholder="Add note or test transcription..."
+              placeholder="Speak or type transcript test message..."
               value={manualSpeech}
               onChange={(e) => setManualSpeech(e.target.value)}
               className="flex-1 px-3 py-2 bg-surface-inner border border-border-subtle rounded-xl text-xs text-foreground placeholder-zinc-400 focus:outline-none focus:border-accent/50"
@@ -363,7 +476,7 @@ export function TranscriptPanel({ callId = "smart-meeting-room", userName = "Use
                     onClick={handleCopySummary}
                     className="text-[10px] font-mono font-semibold text-zinc-500 hover:text-accent transition"
                   >
-                    {copied ? "✓ Copied" : "Copy"}
+                    {copied ? "Copied" : "Copy"}
                   </button>
                 </div>
                 <div className="text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap font-sans font-medium">
